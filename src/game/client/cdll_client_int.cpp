@@ -992,7 +992,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	if (!g_pMatSystemSurface)
 		return false;
 
-	if ( !CommandLine()->CheckParm( "-noscripting") )
+	if ( !CommandLine()->CheckParm( "-noscripting" ) && !CommandLine()->CheckParm( "-noscripting_client" ) )
 	{
 #ifndef MAPBASE_VSCRIPT // Mapbase VScript uses .lib
 		scriptmanager = (IScriptManager *)appSystemFactory( VSCRIPT_INTERFACE_VERSION, NULL );
