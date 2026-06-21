@@ -55,6 +55,10 @@ public:
 	ScriptLanguage_t GetScriptLanguage() { return (ScriptLanguage_t)(m_iScriptLanguageClient != -2 ? m_iScriptLanguageClient : m_iScriptLanguageServer); }
 #endif
 
+#ifdef MAPBASE_MP
+    virtual bool ScriptCanAccess() override { return true; }
+#endif
+
 public:
 	enum
 	{

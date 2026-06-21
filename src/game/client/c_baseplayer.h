@@ -412,6 +412,10 @@ public:
 	C_ColorCorrection*		GetActiveColorCorrection() const;
 #endif
 
+#ifdef MAPBASE_MP
+    virtual bool			ScriptCanAccess() override;
+#endif
+
 	float					GetFOVTime( void ){ return m_flFOVTime; }
 
 	virtual void			OnAchievementAchieved( int iAchievement ) {}

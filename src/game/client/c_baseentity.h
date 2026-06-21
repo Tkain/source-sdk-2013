@@ -296,6 +296,10 @@ public:
 
 	HSCRIPT GetScriptInstance();
 
+#ifdef MAPBASE_MP
+    virtual bool ScriptCanAccess() { return false; }
+#endif
+
 	HSCRIPT			m_hScriptInstance;
 	string_t		m_iszScriptId;
 #ifdef MAPBASE_VSCRIPT

@@ -178,6 +178,10 @@ public:
 	virtual bool			GetAttachmentVelocity( int number, Vector &originVel, Quaternion &angleVel );
 #endif
 
+#ifdef MAPBASE_MP
+    virtual bool			ScriptCanAccess() override;
+#endif
+
 private:
 	CBaseViewModel( const CBaseViewModel & ); // not defined, not accessible
 

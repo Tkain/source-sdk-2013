@@ -77,6 +77,10 @@ public:
 	virtual RenderGroup_t	GetRenderGroup();
 #endif
 
+#if defined(CLIENT_DLL) && defined(MAPBASE_MP)
+    virtual bool			ScriptCanAccess() override;
+#endif
+
 	virtual int				GetSkin( void );
 
 	// Static

@@ -652,6 +652,10 @@ public:
 	//Tony; notifications of any third person switches.
 	virtual void			ThirdPersonSwitch( bool bThirdPerson ) {};
 
+#if defined(CLIENT_DLL) && defined(MAPBASE_MP)
+    virtual bool			ScriptCanAccess() override;
+#endif
+
 #endif // End client-only methods
 
 	virtual bool			CanLower( void ) { return false; }

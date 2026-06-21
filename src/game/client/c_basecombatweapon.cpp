@@ -688,3 +688,14 @@ void C_BaseCombatWeapon::GetToolRecordingState( KeyValues *msg )
 		SetModelIndex( nModelIndex );
 	}
 }
+
+#ifdef MAPBASE_MP
+bool C_BaseCombatWeapon::ScriptCanAccess()
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
+		return false;
+
+    return GetOwner() == pPlayer;
+}
+#endif

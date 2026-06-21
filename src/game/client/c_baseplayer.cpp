@@ -3255,6 +3255,13 @@ C_ColorCorrection* C_BasePlayer::GetActiveColorCorrection() const
 }
 #endif
 
+#ifdef MAPBASE_MP
+bool C_BasePlayer::ScriptCanAccess()
+{
+	return IsLocalPlayer();
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

@@ -405,6 +405,18 @@ bool CEconWearable::ShouldDraw( void )
 	return BaseClass::ShouldDraw();
 }
 
+#if defined(CLIENT_DLL) && defined(MAPBASE_MP)
+bool CEconWearable::ScriptCanAccess()
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
+		return false;
+
+    // wearables use m_hOwnerEntity instead of m_hOwner
+    return GetOwnerEntity() == pPlayer;
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------

@@ -6689,21 +6689,12 @@ int C_BaseEntity::GetCreationTick() const
 HSCRIPT C_BaseEntity::GetScriptInstance()
 {
 #ifdef MAPBASE_MP
-	// No clientside entity access outside of worldspawn + local player and its children
-	if ( this != C_BasePlayer::GetLocalPlayer() && !IsWorld() )
+	// client script should only touch a small whitelist of local player related ents.
+	// we can not naively grant access based on move-parent hierarchy, server-parented props used
+	// in the BadMDL exploit chain bypassed the old check that way. sorry.
+	if ( !ScriptCanAccess() )
 	{
-		// See if the player is somewhere up our hierarchy
-		C_BaseEntity *pParent = GetMoveParent();
-		while ( pParent )
-		{
-			if ( pParent != C_BasePlayer::GetLocalPlayer() )
-				pParent = pParent->GetMoveParent();
-			else
-				break;
-		}
-
-		if ( !pParent )
-			return NULL;
+        return NULL;
 	}
 #endif
 

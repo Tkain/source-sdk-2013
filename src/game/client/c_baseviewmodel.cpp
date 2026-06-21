@@ -510,3 +510,14 @@ RenderGroup_t C_BaseViewModel::GetRenderGroup()
 {
 	return RENDER_GROUP_VIEW_MODEL_OPAQUE;
 }
+
+#ifdef MAPBASE_MP
+bool C_BaseViewModel::ScriptCanAccess()
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
+		return false;
+
+    return GetOwner() == pPlayer;
+}
+#endif
