@@ -113,6 +113,7 @@ CTFHudPlayerClass::CTFHudPlayerClass( Panel *parent, const char *name ) : Editab
 	ListenForGameEvent( "localplayer_changedisguise" );
 	ListenForGameEvent( "post_inventory_application" );
 	ListenForGameEvent( "localplayer_pickup_weapon" );
+	ListenForGameEvent( "localplayer_changeteam" );
 
 	for ( int i = 0; i < TF_CLASS_COUNT_ALL; i++ )
 	{
@@ -604,7 +605,7 @@ void CTFHudPlayerClass::FireGameEvent( IGameEvent * event )
 			UpdateModelPanel();
 		}
 	}
-	else if ( FStrEq( "localplayer_pickup_weapon", pszEventName ) )
+	else if ( FStrEq( "localplayer_pickup_weapon", pszEventName ) || FStrEq( "localplayer_changeteam", pszEventName ) )
 	{
 		UpdateModelPanel();
 	}
