@@ -4576,6 +4576,12 @@ ShadowType_t CTFWeaponBase::ShadowCastType( void )
 	if ( IsEffectActive( EF_NODRAW | EF_NOSHADOW ) || m_iState != WEAPON_IS_ACTIVE )
 		return SHADOWS_NONE;
 
+	// Edge case: the local player's disguise weapon is always active but we'll
+	// never see it, so don't cast its shadow. Other players' disguise weapons
+	// are only networked when shown so we don't need to do this for anyone else.
+	if ( m_bDisguiseWeapon && IsCarriedByLocalPlayer() )
+		return SHADOWS_NONE;
+
 	return BaseClass::ShadowCastType();
 }
 #endif
