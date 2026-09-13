@@ -301,7 +301,10 @@ void CTFHudPlayerClass::OnThink()
 			m_pPlayerModelPanel->SetVisible( true );
 			m_pPlayerModelPanelBG->SetVisible( true );
 
-			UpdateModelPanel();
+			if ( pPlayer->IsAlive() ) 
+			{
+				UpdateModelPanel();
+			}
 		}
 		else if ( m_pClassImage && m_pSpyImage )
 		{
@@ -447,7 +450,7 @@ void CTFHudPlayerClass::UpdateModelPanel()
 	}
 
 	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pPlayer || !pPlayer->IsAlive() )
+	if ( !pPlayer )
 	{
 		return;
 	}
