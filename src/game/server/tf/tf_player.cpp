@@ -2890,12 +2890,10 @@ void CTFPlayer::PrecachePlayerModels( void )
 		{
 			PrecacheModel( g_pszBDayGibs[i] );
 		}
-		PrecacheModel( "models/effects/bday_hat.mdl" );
 	}
 
 	if ( TFGameRules() && TFGameRules()->IsHolidayActive( kHoliday_Halloween ) )
 	{
-		PrecacheModel( "models/props_halloween/halloween_gift.mdl" );
 		PrecacheModel( "models/props_halloween/ghost_no_hat.mdl" );
 		PrecacheModel( "models/props_halloween/ghost_no_hat_red.mdl" );
 	}
