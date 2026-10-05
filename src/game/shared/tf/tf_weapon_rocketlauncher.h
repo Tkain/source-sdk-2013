@@ -55,6 +55,8 @@ public:
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER; }
 
+	virtual bool	CanReload( void ) OVERRIDE;
+
 	virtual bool	OwnerCanTaunt( void ) OVERRIDE;
 
 	virtual void	Misfire( void );
