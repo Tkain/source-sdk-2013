@@ -106,6 +106,7 @@ CTFHudPlayerClass::CTFHudPlayerClass( Panel *parent, const char *name ) : Editab
 	m_hDisguiseWeapon = NULL;
 	m_flNextThink = 0.0f;
 	m_nKillStreak = 0;
+	m_nVisionFilterFlags = 0;
 
 	m_bUsePlayerModel = cl_hud_playerclass_use_playermodel.GetBool();
 	m_bModelPanelDirty = false;
@@ -159,6 +160,7 @@ void CTFHudPlayerClass::ApplySchemeSettings( IScheme *pScheme )
 	m_flNextThink = 0.0f;
 	m_nCloakLevel = 0;
 	m_nLoadoutPosition = LOADOUT_POSITION_PRIMARY;
+	m_nVisionFilterFlags = GetLocalPlayerVisionFilterFlags( true );
 
 	m_pClassImage = FindControl<CTFClassImage>( "PlayerStatusClassImage", false );
 	m_pClassImageBG = FindControl<CTFImagePanel>( "PlayerStatusClassImageBG", false );
@@ -179,6 +181,15 @@ void CTFHudPlayerClass::ApplySchemeSettings( IScheme *pScheme )
 	BaseClass::ApplySchemeSettings( pScheme );
 }
 
+static bool IsMvMRobotDisguise( C_TFPlayer *pPlayer )
+{
+	return pPlayer &&
+		   TFGameRules() && TFGameRules()->IsMannVsMachineMode() &&
+		   pPlayer->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS &&
+		   pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) &&
+		   pPlayer->m_Shared.GetDisguiseTeam() != pPlayer->GetTeamNumber();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -191,6 +202,18 @@ void CTFHudPlayerClass::OnThink()
 	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( !pPlayer )
 		return;
+
+	// Hold the playerhud update for a brief moment so that the weapon can properly update before potentially changing classes
+	// Without a brief stall, past weapon will briefly persist with new disguise
+	CTFWeaponBase *pDisguiseWeapon = pPlayer->m_Shared.GetDisguiseWeapon();
+	bool bDisguiseIdentityChanged = m_nDisguiseClass != pPlayer->m_Shared.GetDisguiseClass() || m_nDisguiseTeam != pPlayer->m_Shared.GetDisguiseTeam();
+	bool bWaitingForDisguiseWeapon = pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) &&
+		( !pDisguiseWeapon || ( bDisguiseIdentityChanged && m_hDisguiseWeapon.Get() == pDisguiseWeapon ) );
+	if ( bWaitingForDisguiseWeapon )
+	{
+		m_flNextThink = gpGlobals->curtime + 0.05f;
+		return;
+	}
 
 	bool bTeamChange = false;
 	// set our background colors
@@ -234,9 +257,17 @@ void CTFHudPlayerClass::OnThink()
 		bPlayerClassModeChange = true;
 	}
 
+	bool bVisionFilterChange = false;
+	int nVisionFilterFlags = GetLocalPlayerVisionFilterFlags( true );
+	if ( m_nVisionFilterFlags != nVisionFilterFlags )
+	{
+		m_nVisionFilterFlags = nVisionFilterFlags;
+		bVisionFilterChange = true;
+	}
+
 	bool bForceEyeUpdate = false;
 	// set our class image
-	if (	m_bModelPanelDirty || m_nClass != pPlayer->GetPlayerClass()->GetClassIndex() || bTeamChange || bCloakChange || bLoadoutPositionChange || bPlayerClassModeChange ||
+	if (	m_bModelPanelDirty || m_nClass != pPlayer->GetPlayerClass()->GetClassIndex() || bTeamChange || bCloakChange || bLoadoutPositionChange || bPlayerClassModeChange || bVisionFilterChange ||
 			(
 				m_nClass == TF_CLASS_SPY &&
 				(
@@ -451,14 +482,27 @@ void CTFHudPlayerClass::UpdateModelPanel()
 		CEconItemView *pWeapon = NULL;
 
 		bool bDisguised = pPlayer->m_Shared.InCond( TF_COND_DISGUISED );
+		bool bRobotDisguise = IsMvMRobotDisguise( pPlayer );	// Are we disguised as a robot?
+		CTFWeaponBase *pDisguiseWeapon = pPlayer->m_Shared.GetDisguiseWeapon();
+		bool bDisguiseIdentityChanged = m_nDisguiseClass != pPlayer->m_Shared.GetDisguiseClass() || m_nDisguiseTeam != pPlayer->m_Shared.GetDisguiseTeam();
+
+		// Hold the playerhud update for a brief moment so that the weapon can properly update before potentially changing classes
+		// Without a brief stall, past weapon will briefly persist with new disguise
+		if ( bDisguised &&
+			 ( !pDisguiseWeapon || ( bDisguiseIdentityChanged && m_hDisguiseWeapon.Get() == pDisguiseWeapon ) ) )
+		{
+			m_flNextThink = gpGlobals->curtime + 0.05f;
+			return;
+		}
+
 		if ( bDisguised )
 		{
 			nClass = pPlayer->m_Shared.GetDisguiseClass();
 			nTeam = pPlayer->m_Shared.GetDisguiseTeam();
 
-			if ( pPlayer->m_Shared.GetDisguiseWeapon() )
+			if ( pDisguiseWeapon )
 			{
-				CAttributeContainer *pCont = pPlayer->m_Shared.GetDisguiseWeapon()->GetAttributeContainer();
+				CAttributeContainer *pCont = pDisguiseWeapon->GetAttributeContainer();
 				pWeapon = pCont ? pCont->GetItem() : NULL;
 				if ( pWeapon )
 				{
@@ -479,7 +523,7 @@ void CTFHudPlayerClass::UpdateModelPanel()
 		}
 
 		m_pPlayerModelPanel->ClearCarriedItems();
-		m_pPlayerModelPanel->SetToPlayerClass( nClass );
+		m_pPlayerModelPanel->SetToPlayerClass( nClass, false, bRobotDisguise ? g_szBotModels[nClass] : NULL, bRobotDisguise );
 		m_pPlayerModelPanel->SetTeam( nTeam );
 
 		if ( pWeapon )
@@ -491,6 +535,9 @@ void CTFHudPlayerClass::UpdateModelPanel()
 		{
 			C_TFWearable *pItem = dynamic_cast<C_TFWearable*>( pPlayer->GetWearable( wbl ) );
 			if ( !pItem )
+				continue;
+
+			if ( pItem->ShouldHideForVisionFilterFlags() )
 				continue;
 
 			if ( pItem->IsViewModelWearable() )
@@ -511,7 +558,7 @@ void CTFHudPlayerClass::UpdateModelPanel()
 			}
 		}
 
-		m_pPlayerModelPanel->HoldItemInSlot( nItemSlot );
+		m_pPlayerModelPanel->HoldItemInSlot( nItemSlot, bRobotDisguise );
 	}
 }
 
